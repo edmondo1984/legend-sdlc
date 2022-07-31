@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.85.1-SNAPSHOT</version>
+    <version>0.82.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -66,8 +66,8 @@
         <java.version.range>[11.0.10,12)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>3.10.0</legend.engine.version>
-        <legend.pure.version>3.3.0</legend.pure.version>
+        <legend.engine.version>3.8.1</legend.engine.version>
+        <legend.pure.version>3.1.0</legend.pure.version>
         <legend.shared.version>0.22.0</legend.shared.version>
 
         <!-- Dependency versions -->
@@ -106,7 +106,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/finos/legend-sdlc</developerConnection>
-        <tag>HEAD</tag>
+        <tag>legend-sdlc-0.71.2</tag>
     </scm>
 
     <build>
@@ -186,6 +186,11 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.0.0-M1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>3.2.1</version>
                 </plugin>
@@ -210,6 +215,12 @@
                     <configuration>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -334,6 +345,19 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <pushChanges>false</pushChanges>
+                    <arguments>-DskipTests</arguments>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>release</releaseProfiles>
+                    <completionGoals>-DreleaseTag=${tag} -N exec:exec@git-push exec:exec@git-push-tag</completionGoals>
+                    <goals>deploy exec:exec@git-push</goals>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
             <plugin>
@@ -352,6 +376,35 @@
                 </configuration>
             </plugin>
 
+            <plugin>
+                <!-- Push new poms to release branch after release.
+                     Ideally we'd use maven-scm-plugin for this, but it doesn't support force pushing to a branch
+                -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>git-push</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>git</executable>
+                            <commandlineArgs>push -f origin HEAD:release</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>git-push-tag</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>git</executable>
+                            <commandlineArgs>push origin ${releaseTag}</commandlineArgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
